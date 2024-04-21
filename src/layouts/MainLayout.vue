@@ -10,11 +10,10 @@
         </q-btn>
 
         <div class="q-gutter-sm">
-          <q-chip>
-            <q-avatar>
-              <img src="https://cdn.quasar.dev/img/boy-avatar.png">
-            </q-avatar>
-            Brandon Jelday Guevara Silva - Gerente General
+          <q-chip color="deep-purple-1">
+            <q-avatar square size="24px" color="deep-purple-3">{{
+              user.name.slice(0, 1) }}</q-avatar>
+            {{ user.name }} - {{ user.roles[0]?.name || 'Sin rol' }}
           </q-chip>
         </div>
       </q-toolbar>
@@ -26,10 +25,22 @@
       </q-toolbar>
     </q-footer>
 
-    <q-drawer v-model="drawer" show-if-above :mini="miniState" @mouseover="miniState = false" @mouseout="miniState = true"
-      mini-to-overlay :width="200" :breakpoint="500" bordered class="bg-deep-purple-1 text-grey-9" active-color="red">
+    <q-drawer v-model="drawer" show-if-above :mini="miniState" @mouseover="miniState = false"
+      @mouseout="miniState = true" mini-to-overlay :width="200" :breakpoint="500" bordered
+      class="bg-deep-purple-1 text-grey-9" active-color="red">
       <q-scroll-area class=" fit" :horizontal-thumb-style="{ opacity: 0 }">
         <q-list padding>
+
+          <q-item v-if="user.allPermissions.includes('read-all-approvals')" clickable
+            :active="drawerItemActive === 'all'" v-ripple @click="onClickDrawerItem('all')">
+            <q-item-section avatar>
+              <q-icon name="all_inbox" />
+            </q-item-section>
+
+            <q-item-section>
+              Todas
+            </q-item-section>
+          </q-item>
 
           <q-item clickable :active="drawerItemActive === 'sended'" v-ripple @click="onClickDrawerItem('sended')">
             <q-item-section avatar>
@@ -43,7 +54,7 @@
 
           <q-item clickable :active="drawerItemActive === 'received'" v-ripple @click="onClickDrawerItem('received')">
             <q-item-section avatar>
-              <q-icon name="all_inbox" />
+              <q-icon name="inbox" />
             </q-item-section>
 
             <q-item-section>
@@ -80,14 +91,27 @@
 </style>
 <script>
 import { ref, onMounted, watch } from 'vue'
+import { useQuasar } from 'quasar'
 import { useRouter } from 'vue-router'
+import { useUserStore } from '../stores/userStore'
+import { useApprovalRequestStore } from '../stores/approvalRequestStore';
 
 export default {
 
   setup() {
 
+    const $q = useQuasar()
+    const userStore = useUserStore()
+    const approvalRequestStore = useApprovalRequestStore();
+
     const router = useRouter()
     const drawerItemActive = ref(router.currentRoute.value.name)
+
+    const onLogOut = () => {
+      userStore.logout()
+      approvalRequestStore.deleteData()
+      router.push('/')
+    }
 
     watch(() => router.currentRoute.value,
       (newValue) => {
@@ -96,6 +120,8 @@ export default {
     )
 
     return {
+      user: $q.localStorage.getItem('userData'),
+      onLogOut,
       drawer: ref(false),
       miniState: ref(true),
       drawerItemActive,
@@ -103,9 +129,6 @@ export default {
         router.push({ path: `/approvals/${path}` })
         drawerItemActive.value = path
       },
-      onLogOut() {
-        router.push('/')
-      }
     }
   }
 }

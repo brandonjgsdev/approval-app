@@ -8,8 +8,8 @@
         <q-separator dark inset />
         <q-card-section>
             <q-form @submit="onSubmit" class="q-gutter-md">
-                <q-input outlined color="deep-purple-6" v-model="email" label="Correo electrónico" type="email" lazy-rules
-                    :rules="[val => val && val.length > 0 || 'Escribe un correo electrónico válido']" />
+                <q-input outlined color="deep-purple-6" v-model="email" label="Correo electrónico" type="email"
+                    lazy-rules :rules="[val => val && val.length > 0 || 'Escribe un correo electrónico válido']" />
                 <q-input outlined color="deep-purple-6" type="password" v-model="password" label="Contraseña" lazy-rules
                     :rules="[val => val && val.length > 0 || 'Escribe una contraseña válida']" />
                 <div class="text-center">
@@ -24,6 +24,8 @@
 import { useQuasar } from 'quasar'
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import axios from 'axios'
+import { useUserStore } from '../stores/userStore'
 
 export default {
     name: 'LoginForm',
@@ -31,21 +33,66 @@ export default {
         const $q = useQuasar()
         const router = useRouter()
 
-        const email = ref('brandon@gmail.com')
-        const password = ref('qwerty123456')
+        const userStore = useUserStore()
+        const email = ref('brandon-rh@gmail.com')
+        const password = ref('qwerty123456789')
 
         return {
             email,
             password,
 
             onSubmit() {
-                // $q.notify({
-                //     type: 'negative',
-                //     position: 'top-right',
-                //     message: 'Credenciales incorrectas. Por favor, inténtalo de nuevo.',
-                // })
-                router.push('/approvals/sended')
-                // alert()
+
+                const loader = $q.notify({
+                    spinner: true,
+                    position: 'center',
+                    message: 'Iniciando sesión...',
+                    block: true
+                })
+
+                axios.post(`${import.meta.env.VITE_APP_URL}/login`, {
+                    "email": email.value,
+                    "password": password.value
+                })
+                    .then(response => {
+
+                        axios.interceptors.request.use(
+                            config => {
+                                config.headers.Authorization = `Bearer ${response.data.auth.accessToken}`
+                                return config
+                            },
+                            error => Promise.reject(error)
+                        )
+
+                        userStore.login(response.data)
+
+                        loader()
+                        $q.notify({
+                            type: 'positive',
+                            position: 'top',
+                            message: response.data.message,
+                        })
+
+                        router.push('/approvals/sended')
+                    })
+                    .catch(error => {
+                        console.log(error);
+
+                        var message = ''
+
+                        if (error.response) {
+                            message = error.response.data.message
+                        } else {
+                            message = 'Ocurrió un error al iniciar sesión. Por favor, inténtalo de nuevo'
+                        }
+
+                        loader()
+                        $q.notify({
+                            type: 'negative',
+                            position: 'top',
+                            message: message,
+                        })
+                    });
             },
         }
     }

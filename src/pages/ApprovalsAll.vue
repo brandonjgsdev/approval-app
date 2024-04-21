@@ -3,7 +3,7 @@
         <ModalStoreApproval v-if="showApprovalModal" @showModal="showApprovalModal = !showApprovalModal" />
         <ModalDetailApproval v-if="showApprovalDetail" @showModal="showApprovalDetail = !showApprovalDetail"
             :approvalRequestDetail="approvalRequestRow" />
-        <q-table flat bordered title="Solicitudes de aprobación recibidas" :rows="approvalRequestStore.received"
+        <q-table flat bordered title="Todas las solicitudes de aprobación" :rows="approvalRequestStore.all"
             :columns="columns" row-key="name">
             <template v-slot:top-right>
                 <q-btn-group>
@@ -135,7 +135,7 @@ export default {
                 // <|::: Users :::|>
 
                 // <|::: Approval Request :::|>
-                approvalRequestStore.getReceivedApprovalRequest();
+                approvalRequestStore.getAllApprovalRequest();
                 // <|::: Approval Request :::|>
             } catch (error) {
                 console.error('Error al obtener catálogos:', error);
@@ -156,7 +156,7 @@ export default {
             exportTable() {
                 // naive encoding to csv format
                 const content = [columns.map(col => wrapCsvValue(col.label))].concat(
-                    approvalRequestStore.received.map(row => columns.map(col => wrapCsvValue(
+                    approvalRequestStore.all.map(row => columns.map(col => wrapCsvValue(
                         typeof col.field === 'function'
                             ? col.field(row)
                             : row[col.field === void 0 ? col.name : col.field],

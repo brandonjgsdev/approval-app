@@ -1,54 +1,51 @@
 <template>
     <div class="q-pa-md">
-        <q-table flat bordered title="Aprobaciones Enviadas" :rows="rows" :columns="columns" row-key="name">
+        <ModalStoreApproval v-if="showApprovalModal" @showModal="showApprovalModal = !showApprovalModal" />
+        <ModalDetailApproval v-if="showApprovalDetail" @showModal="showApprovalDetail = !showApprovalDetail"
+            :approvalRequestDetail="approvalRequestRow" />
+        <q-table flat bordered title="Solicitudes de aprobación enviadas" :rows="approvalRequestStore.sended"
+            :columns="columns" row-key="name">
             <template v-slot:top-right>
                 <q-btn-group>
-                    <q-btn color="green-7" icon="file_download" size="md" label="Exportar en CSV" @click="exportTable" />
-                    <q-btn color="deep-purple-5" icon="add" size="md" to="/approvals/create" label="Crear solicitud" />
+                    <q-btn color="green-7" icon="file_download" size="md" label="Exportar en CSV"
+                        @click="exportTable" />
+                    <q-btn color="deep-purple-5" icon="add" size="md" @click="showApprovalModal = !showApprovalModal"
+                        label="Crear solicitud" />
                 </q-btn-group>
             </template>
             <template v-slot:body="props">
                 <q-tr :props="props" @click="onRowClick(props.row)">
-                    <q-td key="name" :props="props">
-                        {{ props.row.name }}
+                    <q-td key="id" :props="props">
+                        {{ props.row.id }}
                     </q-td>
-                    <q-td key="calories" :props="props">
-                        {{ props.row.calories }}
+                    <q-td key="type" :props="props">
+                        {{ props.row.type }}
                     </q-td>
-                    <q-td key="fat" :props="props">
-                        <q-badge color="purple">
-                            {{ props.row.fat }}
+                    <q-td key="status" :props="props">
+                        <q-badge color="deep-purple">
+                            {{ props.row.status }}
                         </q-badge>
                     </q-td>
-                    <q-td key="carbs" :props="props">
-                        {{ props.row.carbs }}
+                    <q-td key="created" :props="props">
+                        {{ props.row.created }}
                     </q-td>
-                    <q-td key="protein" :props="props">
-                        <q-chip>
-                            <q-avatar>
-                                <img src="https://cdn.quasar.dev/img/boy-avatar.png">
-                            </q-avatar>
-                            {{ props.row.protein }}
+                    <q-td key="applicant" :props="props">
+                        <q-chip color="deep-purple-1">
+                            <q-avatar square size="24px" color="deep-purple-3">{{
+                                props.row.applicant.slice(0, 1) }}</q-avatar>
+                            {{ props.row.applicant }}
                         </q-chip>
                     </q-td>
-                    <q-td key="sodium" :props="props">
-                        <q-chip>
-                            <q-avatar>
-                                <img src="https://cdn.quasar.dev/img/boy-avatar.png">
-                            </q-avatar>
-                            {{ props.row.sodium }}
-                        </q-chip>
+                    <q-td key="approvers" :props="props">
+                        <template v-for="(approver, index) in props.row.approvers" :key="index">
+                            <q-chip color="deep-purple-1">
+                                <q-avatar square size="24px" color="deep-purple-3">{{
+                                    approver.approver_user.name.slice(0, 1) }}</q-avatar>
+                                {{ approver.approver_user.name }}
+                            </q-chip>
+                        </template>
                     </q-td>
-                    <q-td key="calcium" :props="props">
-                        <q-badge color="accent">
-                            {{ props.row.calcium }}
-                        </q-badge>
-                    </q-td>
-                    <q-td key="iron" :props="props">
-                        <q-badge color="amber">
-                            {{ props.row.iron }}
-                        </q-badge>
-                    </q-td>
+
                 </q-tr>
             </template>
         </q-table>
@@ -58,39 +55,27 @@
 <script>
 
 import { exportFile, useQuasar } from 'quasar'
+import ModalStoreApproval from 'src/components/ModalStoreApproval.vue'
+import ModalDetailApproval from 'src/components/ModalDetailApproval.vue'
+import { ref, onMounted } from 'vue'
+import axios from 'axios';
+import { useApprovalTypeStore } from '../stores/approvalTypeStore';
+import { useApprovalRequestStore } from '../stores/approvalRequestStore';
+import { useUserStore } from '../stores/userStore';
 
 const columns = [
     {
-        name: 'name',
+        name: 'id',
         label: 'ID Solicitud',
         align: 'left',
-        field: 'name',
+        field: 'id',
         sortable: true
     },
-    { name: 'calories', align: 'center', label: 'Tipo solicitud', field: 'calories', sortable: true },
-    { name: 'fat', align: 'center', label: 'Estatus', field: 'fat', sortable: true },
-    { name: 'carbs', align: 'center', label: 'Fecha solicitud', field: 'carbs' },
-    { name: 'protein', align: 'center', label: 'Solicitado por', field: 'protein' },
-    { name: 'sodium', align: 'center', label: 'Aprobadores', field: 'sodium' },
-]
-
-const rows = [
-    {
-        name: '1',
-        calories: 'Vacaciones',
-        fat: 'Aprobado',
-        carbs: '04-16-2024 14:00 hrs',
-        protein: 'Brandon Guevara Silva',
-        sodium: 'Jelday Guevara Silva',
-    },
-    {
-        name: '2',
-        calories: 'Permiso',
-        fat: 'Rechazado',
-        carbs: '04-16-2024 14:00 hrs',
-        protein: 'Brandon Guevara Silva',
-        sodium: 'Jelday Guevara Silva',
-    },
+    { name: 'type', align: 'left', label: 'Tipo solicitud', field: 'type', sortable: true },
+    { name: 'status', align: 'left', label: 'Estatus', field: 'status', sortable: true },
+    { name: 'created', align: 'left', label: 'Fecha solicitud', field: 'created' },
+    { name: 'applicant', align: 'left', label: 'Solicitado por', field: 'applicant' },
+    { name: 'approvers', align: 'left', label: 'Aprobadores', field: 'approvers' },
 ]
 
 function wrapCsvValue(val, formatFn, row) {
@@ -103,25 +88,75 @@ function wrapCsvValue(val, formatFn, row) {
         : String(formatted)
 
     formatted = formatted.split('"').join('""')
-    /**
-     * Excel accepts \n and \r in strings, but some other CSV parsers do not
-     * Uncomment the next two lines to escape new lines
-     */
-    // .split('\n').join('\\n')
-    // .split('\r').join('\\r')
 
     return `"${formatted}"`
 }
+
+var showApprovalModal = ref(false)
+var showApprovalDetail = ref(false)
+var approvalRequestRow = ref({})
+
 export default {
-    setup() {
+    components: {
+        ModalStoreApproval,
+        ModalDetailApproval
+    },
+    data: function () {
         return {
-            onRowClick: (row) => alert(`${row.name} clicked`),
+            approvalRequestRow
+        }
+    },
+    setup() {
+
+        const approvalTypeStore = useApprovalTypeStore();
+        const approvalRequestStore = useApprovalRequestStore();
+        const userStore = useUserStore();
+
+        const fetchCatalogs = async () => {
+            try {
+                // <|::: Types :::|>
+                if (approvalTypeStore.options.length === 0) {
+                    const response = await axios.get(`${import.meta.env.VITE_APP_URL}/api/approval-request-types`);
+                    const options = response.data.data.flat().map(item => ({ label: item.name, value: item.id }));
+
+                    // Persistir los datos en el store
+                    approvalTypeStore.setOptions(options);
+                }
+                // <|::: Types :::|>
+
+                // <|::: Users :::|>
+                if (userStore.allUsers.length === 0) {
+                    const response = await axios.get(`${import.meta.env.VITE_APP_URL}/api/users`);
+                    const options = response.data.data.flat().map(item => ({ label: item.name, value: item.id }));
+
+                    // Persistir los datos en el store
+                    userStore.setAllUsers(options);
+                }
+                // <|::: Users :::|>
+
+                // <|::: Approval Request :::|>
+                approvalRequestStore.getSendedApprovalRequest();
+                // <|::: Approval Request :::|>
+            } catch (error) {
+                console.error('Error al obtener catálogos:', error);
+            }
+        }
+
+        onMounted(fetchCatalogs);
+
+        return {
+            onRowClick: (row) => {
+                showApprovalDetail.value = true
+                approvalRequestRow.value = row
+            },
+            showApprovalModal,
+            showApprovalDetail,
             columns,
-            rows,
+            approvalRequestStore,
             exportTable() {
                 // naive encoding to csv format
                 const content = [columns.map(col => wrapCsvValue(col.label))].concat(
-                    rows.map(row => columns.map(col => wrapCsvValue(
+                    approvalRequestStore.sended.map(row => columns.map(col => wrapCsvValue(
                         typeof col.field === 'function'
                             ? col.field(row)
                             : row[col.field === void 0 ? col.name : col.field],
@@ -148,4 +183,3 @@ export default {
     }
 }
 </script>
-  
