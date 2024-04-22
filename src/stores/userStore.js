@@ -13,6 +13,15 @@ export const useUserStore = defineStore("user", {
     setAllUsers(users) {
       this.allUsers = users;
     },
+    async getAllUsers() {
+      const response = await axios.get(
+        `${import.meta.env.VITE_APP_URL}/api/users`
+      );
+      const options = response.data.data
+        .flat()
+        .map((item) => ({ label: item.name, value: item.id }));
+      this.allUsers = options;
+    },
     login({ userData, auth }) {
       this.user = userData;
       this.isAuthenticated = true;
@@ -22,10 +31,6 @@ export const useUserStore = defineStore("user", {
     },
 
     async logout() {
-      // const response = await axios.post(
-      //   `${import.meta.env.VITE_APP_URL}/logout`
-      // );
-
       this.user = null;
       this.isAuthenticated = false;
       this.allUsers = [];

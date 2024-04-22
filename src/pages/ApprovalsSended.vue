@@ -116,26 +116,20 @@ export default {
             try {
                 // <|::: Types :::|>
                 if (approvalTypeStore.options.length === 0) {
-                    const response = await axios.get(`${import.meta.env.VITE_APP_URL}/api/approval-request-types`);
-                    const options = response.data.data.flat().map(item => ({ label: item.name, value: item.id }));
-
-                    // Persistir los datos en el store
-                    approvalTypeStore.setOptions(options);
+                    approvalTypeStore.getAllTypes(options);
                 }
                 // <|::: Types :::|>
 
                 // <|::: Users :::|>
                 if (userStore.allUsers.length === 0) {
-                    const response = await axios.get(`${import.meta.env.VITE_APP_URL}/api/users`);
-                    const options = response.data.data.flat().map(item => ({ label: item.name, value: item.id }));
-
-                    // Persistir los datos en el store
-                    userStore.setAllUsers(options);
+                    userStore.getAllUsers();
                 }
                 // <|::: Users :::|>
 
                 // <|::: Approval Request :::|>
-                approvalRequestStore.getSendedApprovalRequest();
+                if (approvalRequestStore.sended.length === 0) {
+                    approvalRequestStore.getSendedApprovalRequest();
+                }
                 // <|::: Approval Request :::|>
             } catch (error) {
                 console.error('Error al obtener catálogos:', error);

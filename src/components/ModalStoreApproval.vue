@@ -1,6 +1,4 @@
 <template>
-
-
     <q-dialog v-model="fixed" backdrop-filter="blur(4px) saturate(150%)" persistent class="q-pb-none">
         <q-card style="width: 700px; max-width: 100vw;">
             <q-card-section class="row items-center q-pb-none bg-deep-purple-5 text-white">
@@ -84,7 +82,7 @@ export default {
                 "approval_request_type_id": approvalType.value.value,
                 "applicant_user_id": userStore.user.id,
                 "approvers": approvers.value,
-                "days": days.value.join(','),
+                "days": days.value.join(', '),
                 "remark": remark.value,
             })
                 .then(response => {
