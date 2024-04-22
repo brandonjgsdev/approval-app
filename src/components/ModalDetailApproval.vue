@@ -150,6 +150,7 @@ export default {
 
                         // <|::: Approval Request :::|>
                         approvalRequestStore.getReceivedApprovalRequest();
+                        approvalRequestStore.getAllApprovalRequest();
                         // <|::: Approval Request :::|>
 
                         emit('showModal', false)

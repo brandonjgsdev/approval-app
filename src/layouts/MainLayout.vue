@@ -6,7 +6,7 @@
         <q-toolbar-title>☑️ Approval App</q-toolbar-title>
 
         <q-btn flat round dense icon="notifications" class="q-ml-md q-mx-lg">
-          <q-badge color="red" floating>4</q-badge>
+          <q-badge color="red" floating>0</q-badge>
         </q-btn>
 
         <div class="q-gutter-sm">

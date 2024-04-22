@@ -116,7 +116,7 @@ export default {
             try {
                 // <|::: Types :::|>
                 if (approvalTypeStore.options.length === 0) {
-                    approvalTypeStore.getAllTypes(options);
+                    approvalTypeStore.getAllTypes();
                 }
                 // <|::: Types :::|>
 
